@@ -1,22 +1,57 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Generate adonis key
 
-# Run and deploy your AI Studio app
+`node ace generate:key`
 
-This contains everything you need to run your app locally.
+# Requirements
 
-View your app in AI Studio: https://ai.studio/apps/c5906356-a83b-4cca-8a67-d73d2b350f06
+- nodejs 20
+- mysql 8
+- redis 7
+- smtp
 
-## Run Locally
+# where to define config
 
-**Prerequisites:**  Node.js
+- services.ts
 
+# where to define env so they should be cast
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
-# My-Project-Invantory-Mangament-Systems
-# My-Project-Invantory-Mangament-Systems
+- env.ts
+- define all evn there so they should be automatically cast to specific type like string, boolean or number
+
+# rules
+
+## variables
+
+- variables names should be camel case in controller, services and validator
+- example
+
+```
+userType
+
+userId
+
+companyUserRoles
+```
+
+- routes name should be snake case
+- example
+
+```
+api/users/generate-report
+
+api/users/:userId/logs
+```
+
+# email sending
+
+- first create email class
+- `node ace make:mail WelcomeEmail`
+- create email send event so we can dispatch the email
+- check the events.ts file for email sending
+
+# Commands for day to day development
+
+npm run format
+npm run lint
+npm run typecheck
+npm run spellcheck

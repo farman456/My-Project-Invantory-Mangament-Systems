@@ -1,0 +1,103 @@
+import Type from '#models/type'
+import { applyListQuery } from '#helpers/list_query_helper'
+import type { ListQueryOptions } from '#validators/list_query_validator'
+import {
+  createTypeValidatorInterface,
+  updateTypeValidatorInterface,
+} from '#validators/type_validator'
+
+export const listTypes = async (page = 1, perPage = 100, options: ListQueryOptions = {}) => {
+  try {
+    const query = applyListQuery(Type.query(), options, {
+      searchColumns: ['types.name'],
+      sortColumns: { id: 'types.id', name: 'types.name' },
+    })
+    const paginator = await query
+      .select('id', 'name')
+      .paginate(page, perPage)
+
+    return {
+      items: paginator.all(),
+      pagination: {
+        total: paginator.total,
+        perPage: paginator.perPage,
+        currentPage: paginator.currentPage,
+        lastPage: paginator.lastPage,
+      },
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`Error retrieving types: ${message}`)
+  }
+}
+
+export const getType = async (typeId: number) => {
+  try {
+    const type = await Type.find(typeId)
+    if (!type) {
+      throw new Error(`Type with ID: ${typeId} does not exist`)
+    }
+    return { id: type.id, name: type.name }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`Error retrieving type: ${message}`)
+  }
+}
+
+export const createType = async (payload: createTypeValidatorInterface) => {
+  try {
+    const type = await Type.create({
+      name: payload.name,
+    })
+
+    return {
+      id: type.id,
+      name: type.name,
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`Error creating type: ${message}`)
+  }
+}
+
+export const updateType = async (payload: updateTypeValidatorInterface, typeId: number) => {
+  try {
+    const type = await Type.find(typeId)
+
+    if (!type) {
+      throw new Error(`Type with ID: ${typeId} does not exist`)
+    }
+
+    await type.merge(payload).save()
+
+    return {
+      id: type.id,
+      name: type.name,
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`Error updating type: ${message}`)
+  }
+}
+
+export const deleteType = async (typeId: number) => {
+  try {
+    const type = await Type.find(typeId)
+
+    if (!type) {
+      throw new Error(`Type with ID: ${typeId} does not exist`)
+    }
+
+    await type.delete()
+  } catch (error) {
+    const databaseError = error as { code?: string; errno?: number }
+    const message =
+      databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451
+        ? 'Type cannot be deleted because it is referenced by one or more products'
+        : error instanceof Error
+          ? error.message
+          : String(error)
+
+    throw new Error(`Error deleting type: ${message}`)
+  }
+}
