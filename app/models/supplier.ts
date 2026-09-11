@@ -19,7 +19,7 @@ export default class Supplier extends BaseModel {
   @belongsTo(() => Person, { foreignKey: 'personId' })
   declare person: BelongsTo<typeof Person>
 
-  @hasMany(() => Product, { foreignKey: 'supplier' })
+  @hasMany(() => Product, { foreignKey: 'supplierId' })
   declare products: HasMany<typeof Product>
 
   @hasMany(() => StockMovement, { foreignKey: 'supplier' })

@@ -18,6 +18,6 @@ export default class Type extends BaseModel {
   @column()
   declare name: string | null
 
-  @hasMany(() => Product, { foreignKey: 'type' })
+  @hasMany(() => Product, { foreignKey: 'typeId' })
   declare products: HasMany<typeof Product>
 }

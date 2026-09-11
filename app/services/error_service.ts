@@ -67,7 +67,7 @@ export default class ErrorService {
   public static handleValidationError(ctx: HttpContext, error: any) {
     const formattedErrors = this.formatErrors(error.messages)
 
-    return ctx.response.status(422).json({
+    return ctx.response.status(400).json({
       status: false,
       message: 'Validation failure',
       errors: formattedErrors,

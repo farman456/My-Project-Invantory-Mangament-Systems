@@ -54,6 +54,29 @@ export const updateProductValidator = vine.compile(
 
 export type updateProductValidatorInterface = Infer<typeof updateProductValidator>
 
+export const updateProductPatchValidator = vine.compile(
+  vine.object({
+    name: vine.string().trim().minLength(1).maxLength(150).optional(),
+    type: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'types', column: 'id' })
+      .optional(),
+    supplier: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'suppliers', column: 'id' })
+      .optional(),
+    price: vine.number().min(0).max(9999999999.99).optional(),
+    status: vine.string().trim().maxLength(20).optional(),
+    actions: vine.string().trim().maxLength(50).optional(),
+  })
+)
+
+export type updateProductPatchValidatorInterface = Infer<typeof updateProductPatchValidator>
+
 export const productIdValidator = vine.compile(
   vine.object({
     productId: vine.number().positive().withoutDecimals(),

@@ -12,8 +12,8 @@ export default class Product extends BaseModel {
   /**
    * References the "types" table (types.id)
    */
-  @column()
-  declare type: number | null
+  @column({ columnName: 'type_id', serializeAs: 'type' })
+  declare typeId: number | null
 
   @column()
   declare name: string | null
@@ -31,13 +31,13 @@ export default class Product extends BaseModel {
   /**
    * References the "suppliers" table (suppliers.id)
    */
-  @column()
-  declare supplier: number | null
+  @column({ columnName: 'supplier_id', serializeAs: 'supplier' })
+  declare supplierId: number | null
 
-  @belongsTo(() => Type, { foreignKey: 'type' })
+  @belongsTo(() => Type, { foreignKey: 'typeId' })
   declare typeRecord: BelongsTo<typeof Type>
 
-  @belongsTo(() => Supplier, { foreignKey: 'supplier' })
+  @belongsTo(() => Supplier, { foreignKey: 'supplierId' })
   declare supplierRecord: BelongsTo<typeof Supplier>
 
   @column()

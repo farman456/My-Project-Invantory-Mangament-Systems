@@ -10,6 +10,7 @@ import {
 import {
   createProductValidator,
   productIdValidator,
+  updateProductPatchValidator,
   updateProductValidator,
 } from '#validators/product_validator'
 import { listPaginationValidator } from '#validators/list_pagination_validator'
@@ -63,6 +64,18 @@ export default class ProductsController {
       return sendSuccess('Product updated successfully', product)
     } catch (error) {
       console.log('Product updating error', error)
+      return ErrorService.handleError(ctx, error)
+    }
+  }
+
+  public async partialUpdate(ctx: HttpContext) {
+    try {
+      const { productId } = await productIdValidator.validate(ctx.params)
+      const payload = await updateProductPatchValidator.validate(ctx.request.body())
+      const product = await updateProduct(payload, productId)
+      return sendSuccess('Product updated successfully', product)
+    } catch (error) {
+      console.log('Product partially updating error', error)
       return ErrorService.handleError(ctx, error)
     }
   }

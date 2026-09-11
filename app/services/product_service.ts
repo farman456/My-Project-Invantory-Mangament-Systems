@@ -3,6 +3,7 @@ import { applyListQuery } from '#helpers/list_query_helper'
 import type { ListQueryOptions } from '#validators/list_query_validator'
 import {
   createProductValidatorInterface,
+  updateProductPatchValidatorInterface,
   updateProductValidatorInterface,
 } from '#validators/product_validator'
 
@@ -12,14 +13,14 @@ export const listProducts = async (page = 1, perPage = 100, options: ListQueryOp
       searchColumns: ['products.name'],
       sortColumns: { id: 'products.id', name: 'products.name', price: 'products.price', status: 'products.status' },
     })
-    if (options.type !== undefined) query.where('products.type', options.type)
-    if (options.supplier !== undefined) query.where('products.supplier', options.supplier)
+    if (options.type !== undefined) query.where('products.type_id', options.type)
+    if (options.supplier !== undefined) query.where('products.supplier_id', options.supplier)
     if (options.status !== undefined) query.where('products.status', options.status)
     if (options.minPrice !== undefined) query.where('products.price', '>=', options.minPrice)
     if (options.maxPrice !== undefined) query.where('products.price', '<=', options.maxPrice)
 
     const paginator = await query
-      .select('id', 'type', 'name', 'price', 'supplier', 'status', 'actions')
+      .select('id', 'type_id', 'name', 'price', 'supplier_id', 'status', 'actions')
       .paginate(page, perPage)
 
     return {
@@ -39,7 +40,14 @@ export const listProducts = async (page = 1, perPage = 100, options: ListQueryOp
 
 export const createProduct = async (payload: createProductValidatorInterface) => {
   try {
-    return await Product.create(payload)
+    return await Product.create({
+      name: payload.name,
+      typeId: payload.type,
+      supplierId: payload.supplier,
+      price: payload.price,
+      status: payload.status,
+      actions: payload.actions,
+    })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     throw new Error(`Error creating product: ${message}`)
@@ -47,7 +55,7 @@ export const createProduct = async (payload: createProductValidatorInterface) =>
 }
 
 export const updateProduct = async (
-  payload: updateProductValidatorInterface,
+  payload: updateProductValidatorInterface | updateProductPatchValidatorInterface,
   productId: number
 ) => {
   try {
@@ -59,8 +67,8 @@ export const updateProduct = async (
 
     const data: Record<string, any> = {}
     if (payload.name !== undefined) data.name = payload.name
-    if (payload.type !== undefined) data.type = payload.type
-    if (payload.supplier !== undefined) data.supplier = payload.supplier
+    if (payload.type !== undefined) data.typeId = payload.type
+    if (payload.supplier !== undefined) data.supplierId = payload.supplier
     if (payload.price !== undefined) data.price = payload.price
     if (payload.status !== undefined) data.status = payload.status
     if (payload.actions !== undefined) data.actions = payload.actions
