@@ -13,6 +13,7 @@ import {
   updatePurchaseOrderValidator,
 } from '#validators/purchase_order_validator'
 import { listPaginationValidator } from '#validators/list_pagination_validator'
+import { validateListQuery } from '#validators/list_query_validator'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class PurchaseOrdersController {
@@ -23,7 +24,7 @@ export default class PurchaseOrdersController {
         page: page === undefined ? undefined : Number(page),
         perPage: perPage === undefined ? undefined : Number(perPage),
       })
-      return sendSuccess('Purchase orders listed successfully', await listPurchaseOrders(pagination.page, pagination.perPage))
+      return sendSuccess('Purchase orders listed successfully', await listPurchaseOrders(pagination.page, pagination.perPage, await validateListQuery(ctx.request.qs())))
     } catch (error) {
       console.log('Purchase order listing error', error)
       return ErrorService.handleError(ctx, error)

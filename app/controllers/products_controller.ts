@@ -20,12 +20,17 @@ import type { HttpContext } from '@adonisjs/core/http'
 export default class ProductsController {
   public async index(ctx: HttpContext) {
     try {
-      const { page, perPage } = ctx.request.qs()
+      const { page, perPage, limit, pageSize, sortBy, sortOrder } = ctx.request.qs()
+      const requestedPerPage = perPage ?? pageSize ?? limit
       const pagination = await listPaginationValidator.validate({
         page: page === undefined ? undefined : Number(page),
-        perPage: perPage === undefined ? undefined : Number(perPage),
+        perPage: requestedPerPage === undefined ? undefined : Number(requestedPerPage),
       })
-      const options = await validateListQuery(ctx.request.qs())
+      const options = await validateListQuery({
+        ...ctx.request.qs(),
+        sort: sortBy,
+        order: sortOrder,
+      })
       const products = await listProducts(pagination.page, pagination.perPage, options)
       return sendSuccess('Products listed successfully', products)
     } catch (error) {

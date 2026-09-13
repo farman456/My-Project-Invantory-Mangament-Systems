@@ -7,10 +7,16 @@ router
   .group(() => {
     router.get('/', [PurchaseOrdersController, 'index'])
     router.get('/:purchaseOrderId', [PurchaseOrdersController, 'show'])
+  })
+  .prefix('api/purchase-orders')
+  .use([middleware.auth()])
+
+router
+  .group(() => {
     router.post('/', [PurchaseOrdersController, 'create'])
     router.put('/:purchaseOrderId', [PurchaseOrdersController, 'update'])
     router.patch('/:purchaseOrderId', [PurchaseOrdersController, 'update'])
     router.delete('/:purchaseOrderId', [PurchaseOrdersController, 'delete'])
   })
   .prefix('api/purchase-orders')
-  .use([middleware.auth()])
+  .use([middleware.auth(), middleware.authorize()])

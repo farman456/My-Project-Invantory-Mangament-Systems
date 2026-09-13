@@ -7,10 +7,16 @@ router
   .group(() => {
     router.get('/', [PurchaseInvoicesController, 'index'])
     router.get('/:purchaseInvoiceId', [PurchaseInvoicesController, 'show'])
+  })
+  .prefix('api/purchase-invoices')
+  .use([middleware.auth()])
+
+router
+  .group(() => {
     router.post('/', [PurchaseInvoicesController, 'create'])
     router.put('/:purchaseInvoiceId', [PurchaseInvoicesController, 'update'])
     router.patch('/:purchaseInvoiceId', [PurchaseInvoicesController, 'update'])
     router.delete('/:purchaseInvoiceId', [PurchaseInvoicesController, 'delete'])
   })
   .prefix('api/purchase-invoices')
-  .use([middleware.auth()])
+  .use([middleware.auth(), middleware.authorize()])

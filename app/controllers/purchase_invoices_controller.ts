@@ -13,6 +13,7 @@ import {
   updatePurchaseInvoiceValidator,
 } from '#validators/purchase_invoice_validator'
 import { listPaginationValidator } from '#validators/list_pagination_validator'
+import { validateListQuery } from '#validators/list_query_validator'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class PurchaseInvoicesController {
@@ -20,7 +21,7 @@ export default class PurchaseInvoicesController {
     try {
       const { page, perPage } = ctx.request.qs()
       const pagination = await listPaginationValidator.validate({ page: page === undefined ? undefined : Number(page), perPage: perPage === undefined ? undefined : Number(perPage) })
-      return sendSuccess('Purchase invoices listed successfully', await listPurchaseInvoices(pagination.page, pagination.perPage))
+      return sendSuccess('Purchase invoices listed successfully', await listPurchaseInvoices(pagination.page, pagination.perPage, await validateListQuery(ctx.request.qs())))
     } catch (error) {
       console.log('Purchase invoice listing error', error)
       return ErrorService.handleError(ctx, error)

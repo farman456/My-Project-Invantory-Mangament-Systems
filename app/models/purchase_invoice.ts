@@ -1,4 +1,7 @@
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import Supplier from '#models/supplier'
+import PurchaseOrder from '#models/purchase_order'
 
 export default class PurchaseInvoice extends BaseModel {
   static table = 'purchase_invoices'
@@ -42,4 +45,10 @@ export default class PurchaseInvoice extends BaseModel {
 
   @column()
   declare actions: string | null
+
+  @belongsTo(() => PurchaseOrder, { foreignKey: 'purchaseOrderId' })
+  declare purchaseOrder: BelongsTo<typeof PurchaseOrder>
+
+  @belongsTo(() => Supplier, { foreignKey: 'supplierId' })
+  declare supplier: BelongsTo<typeof Supplier>
 }

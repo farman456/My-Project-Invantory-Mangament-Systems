@@ -1,23 +1,17 @@
 import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-import Supplier from '#models/supplier'
+import Customer from '#models/customer'
 import Product from '#models/product'
 
-export default class PurchaseOrder extends BaseModel {
-  static table = 'purchase_orders'
+export default class SaleOrder extends BaseModel {
+  static table = 'sale_orders'
 
   @column({ isPrimary: true })
   declare id: number
 
-  /**
-   * References the "suppliers" table (suppliers.id)
-   */
   @column()
-  declare supplierId: number | null
+  declare customerId: number | null
 
-  /**
-   * References the "products" table (products.id)
-   */
   @column()
   declare productId: number | null
 
@@ -30,14 +24,10 @@ export default class PurchaseOrder extends BaseModel {
   @column()
   declare noOfItems: number | null
 
-  /**
-   * Decimal(12,2). Serialize always as number to keep the API contract clean.
-   */
-  @column({
-    serialize: (value: number | string | null) => {
-      return value === null || value === undefined ? value : Number(value)
-    },
-  })
+  @column()
+  declare referral: string | null
+
+  @column({ serialize: (value: number | string | null) => value === null || value === undefined ? value : Number(value) })
   declare orderValue: number | null
 
   @column()
@@ -46,8 +36,8 @@ export default class PurchaseOrder extends BaseModel {
   @column()
   declare actions: string | null
 
-  @belongsTo(() => Supplier, { foreignKey: 'supplierId' })
-  declare supplier: BelongsTo<typeof Supplier>
+  @belongsTo(() => Customer, { foreignKey: 'customerId' })
+  declare customer: BelongsTo<typeof Customer>
 
   @belongsTo(() => Product, { foreignKey: 'productId' })
   declare product: BelongsTo<typeof Product>

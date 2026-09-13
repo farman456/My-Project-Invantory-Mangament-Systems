@@ -12,15 +12,17 @@ export default class AuthorizationMiddleware {
       return this.forbidden(ctx)
     }
 
-    if (this.isRoleEscalationAttempt(ctx, user.roleId)) {
+    const roleName = user.role.roleName?.toLowerCase()
+
+    if (this.isRoleEscalationAttempt(ctx, roleName, user.roleId)) {
       return this.forbidden(ctx)
     }
 
-    if (user.roleId === UserTypeEnum.admin || user.roleId === UserTypeEnum.superAdmin) {
+    if (roleName === 'admin' || roleName === 'super admin') {
       return next()
     }
 
-    if (user.roleId === UserTypeEnum.user && this.canUserAccessProfile(ctx, user.id)) {
+    if (roleName === 'user' && this.canUserAccessProfile(ctx, user.id)) {
       return next()
     }
 
@@ -35,7 +37,7 @@ export default class AuthorizationMiddleware {
     return match !== null && (method === 'GET' || method === 'PATCH') && Number(match[1]) === userId
   }
 
-  private isRoleEscalationAttempt(ctx: HttpContext, roleId: number) {
+  private isRoleEscalationAttempt(ctx: HttpContext, roleName: string | undefined, roleId: number) {
     const body = ctx.request.body()
     if (
       !body ||
@@ -45,11 +47,14 @@ export default class AuthorizationMiddleware {
       return false
     }
 
-    if (roleId === UserTypeEnum.user) {
+    if (roleName === 'user' || roleId === UserTypeEnum.user) {
       return true
     }
 
-    return roleId === UserTypeEnum.admin && Number(body.role_id) === UserTypeEnum.superAdmin
+    return (
+      (roleName === 'admin' || roleId === UserTypeEnum.admin) &&
+      Number(body.role_id) === UserTypeEnum.superAdmin
+    )
   }
 
   private forbidden(ctx: HttpContext) {

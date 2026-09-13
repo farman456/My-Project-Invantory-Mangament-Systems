@@ -7,10 +7,16 @@ router
   .group(() => {
     router.get('/', [PurchaseReturnsController, 'index'])
     router.get('/:purchaseReturnId', [PurchaseReturnsController, 'show'])
+  })
+  .prefix('api/purchase-returns')
+  .use([middleware.auth()])
+
+router
+  .group(() => {
     router.post('/', [PurchaseReturnsController, 'create'])
     router.put('/:purchaseReturnId', [PurchaseReturnsController, 'update'])
     router.patch('/:purchaseReturnId', [PurchaseReturnsController, 'update'])
     router.delete('/:purchaseReturnId', [PurchaseReturnsController, 'delete'])
   })
   .prefix('api/purchase-returns')
-  .use([middleware.auth()])
+  .use([middleware.auth(), middleware.authorize()])

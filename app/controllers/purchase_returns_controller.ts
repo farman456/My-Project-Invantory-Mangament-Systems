@@ -13,6 +13,7 @@ import {
   updatePurchaseReturnValidator,
 } from '#validators/purchase_return_validator'
 import { listPaginationValidator } from '#validators/list_pagination_validator'
+import { validateListQuery } from '#validators/list_query_validator'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class PurchaseReturnsController {
@@ -20,7 +21,7 @@ export default class PurchaseReturnsController {
     try {
       const { page, perPage } = ctx.request.qs()
       const pagination = await listPaginationValidator.validate({ page: page === undefined ? undefined : Number(page), perPage: perPage === undefined ? undefined : Number(perPage) })
-      return sendSuccess('Purchase returns listed successfully', await listPurchaseReturns(pagination.page, pagination.perPage))
+      return sendSuccess('Purchase returns listed successfully', await listPurchaseReturns(pagination.page, pagination.perPage, await validateListQuery(ctx.request.qs())))
     } catch (error) {
       console.log('Purchase return listing error', error)
       return ErrorService.handleError(ctx, error)

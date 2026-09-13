@@ -1,11 +1,19 @@
 import PurchaseReturn from '#models/purchase_return'
+import { applyListQuery } from '#helpers/list_query_helper'
+import type { ListQueryOptions } from '#validators/list_query_validator'
 import {
   createPurchaseReturnValidatorInterface,
   updatePurchaseReturnValidatorInterface,
 } from '#validators/purchase_return_validator'
 
-export const listPurchaseReturns = async (page = 1, perPage = 25) => {
-  const paginator = await PurchaseReturn.query().orderBy('id', 'asc').paginate(page, perPage)
+export const listPurchaseReturns = async (page = 1, perPage = 25, options: ListQueryOptions = {}) => {
+  const query = applyListQuery(PurchaseReturn.query(), options, {
+    searchColumns: ['purchase_returns.name', 'purchase_returns.return_details', 'purchase_returns.status'],
+    sortColumns: { id: 'purchase_returns.id', name: 'purchase_returns.name', refundValue: 'purchase_returns.refund_value', status: 'purchase_returns.status' },
+  })
+  if (options.status !== undefined) query.where('purchase_returns.status', options.status)
+  if (options.supplier !== undefined) query.where('purchase_returns.supplier_id', options.supplier)
+  const paginator = await query.paginate(page, perPage)
   return { items: paginator.all(), pagination: { total: paginator.total, perPage: paginator.perPage, currentPage: paginator.currentPage, lastPage: paginator.lastPage } }
 }
 
