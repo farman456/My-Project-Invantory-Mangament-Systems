@@ -30,7 +30,7 @@ export const createPurchaseOrderValidator = vine.compile(
     /**
      * Purchase_orders.no_of_items - positive integer value
      */
-    noOfItems: vine.number().positive().withoutDecimals(),
+    noOfItems: vine.number().min(1).withoutDecimals(),
     /**
      * Purchase_orders.order_value decimal(12,2) - non-negative numeric value
      */
@@ -48,7 +48,7 @@ export const updatePurchaseOrderValidator = vine.compile(
     supplierId: vine.number().positive().withoutDecimals().exists({ table: 'suppliers', column: 'id' }).optional(),
     productId: vine.number().positive().withoutDecimals().exists({ table: 'products', column: 'id' }).optional(),
     orderDetails: vine.string().trim().optional(),
-    noOfItems: vine.number().positive().withoutDecimals().optional(),
+    noOfItems: vine.number().min(1).withoutDecimals().optional(),
     orderValue: vine.number().min(0).max(9999999999.99).optional(),
     status: vine.string().trim().maxLength(20).optional(),
     actions: vine.string().trim().maxLength(50).optional(),

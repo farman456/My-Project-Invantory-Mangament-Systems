@@ -3,15 +3,25 @@ import { applyListQuery } from '#helpers/list_query_helper'
 import type { ListQueryOptions } from '#validators/list_query_validator'
 import {
   createTypeValidatorInterface,
+  typeListQueryValidatorInterface,
+  updateTypePatchValidatorInterface,
   updateTypeValidatorInterface,
 } from '#validators/type_validator'
 
-export const listTypes = async (page = 1, perPage = 100, options: ListQueryOptions = {}) => {
+type TypeListQueryOptions = ListQueryOptions & Partial<typeListQueryValidatorInterface>
+
+export const listTypes = async (page = 1, perPage = 100, options: TypeListQueryOptions = {}) => {
   try {
     const query = applyListQuery(Type.query(), options, {
       searchColumns: ['types.name'],
       sortColumns: { id: 'types.id', name: 'types.name' },
     })
+    if (options.investigationRequired !== undefined) {
+      query.where('types.investigation_required', options.investigationRequired)
+    }
+    if (options.status !== undefined) {
+      query.where('types.status', options.status)
+    }
     const paginator = await query
       .select('id', 'name')
       .paginate(page, perPage)
@@ -48,6 +58,7 @@ export const createType = async (payload: createTypeValidatorInterface) => {
   try {
     const type = await Type.create({
       name: payload.name,
+      investigationRequired: payload.investigationRequired,
     })
 
     return {
@@ -60,7 +71,10 @@ export const createType = async (payload: createTypeValidatorInterface) => {
   }
 }
 
-export const updateType = async (payload: updateTypeValidatorInterface, typeId: number) => {
+export const updateType = async (
+  payload: updateTypeValidatorInterface | updateTypePatchValidatorInterface,
+  typeId: number
+) => {
   try {
     const type = await Type.find(typeId)
 
@@ -68,7 +82,10 @@ export const updateType = async (payload: updateTypeValidatorInterface, typeId: 
       throw new Error(`Type with ID: ${typeId} does not exist`)
     }
 
-    await type.merge(payload).save()
+    await type.merge({
+      name: payload.name,
+      investigationRequired: payload.investigationRequired,
+    }).save()
 
     return {
       id: type.id,

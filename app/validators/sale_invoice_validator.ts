@@ -6,7 +6,7 @@ const fields = {
   saleOrderId: vine.number().positive().withoutDecimals().exists({ table: 'sale_orders', column: 'id' }),
   customerId: vine.number().positive().withoutDecimals().exists({ table: 'customers', column: 'id' }),
   invoiceDetails: vine.string().trim().optional(),
-  noOfItems: vine.number().positive().withoutDecimals(),
+  noOfItems: vine.number().min(1).withoutDecimals(),
   referral: vine.string().trim().maxLength(150).optional(),
   invoiceValue: vine.number().min(0).max(9999999999.99),
   status: vine.string().trim().maxLength(20).optional(),

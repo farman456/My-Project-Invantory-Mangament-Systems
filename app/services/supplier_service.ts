@@ -1,6 +1,7 @@
 import Supplier from '#models/supplier'
 import {
   createSupplierValidatorInterface,
+  updateSupplierPatchValidatorInterface,
   updateSupplierValidatorInterface,
 } from '#validators/supplier_validator'
 import db from '@adonisjs/lucid/services/db'
@@ -104,7 +105,7 @@ export const getSupplier = async (supplierId: number) => {
 }
 
 export const updateSupplier = async (
-  payload: updateSupplierValidatorInterface,
+  payload: updateSupplierValidatorInterface | updateSupplierPatchValidatorInterface,
   supplierId: number
 ) => {
   const transaction = await db.transaction()
@@ -118,15 +119,16 @@ export const updateSupplier = async (
       throw new Error(`Supplier with ID: ${supplierId} has no person record`)
     }
 
-    await transaction.from('persons').where('id', supplier.personId).update({
-      name: payload.name,
-      contact_person: payload.contactPerson,
-      phone: payload.phone,
-      email: payload.email,
-      area_city: payload.areaCity,
-      status: payload.status,
-      actions: payload.actions,
-    })
+    const data: Record<string, unknown> = {}
+    if (payload.name !== undefined) data.name = payload.name
+    if (payload.contactPerson !== undefined) data.contact_person = payload.contactPerson
+    if (payload.phone !== undefined) data.phone = payload.phone
+    if (payload.email !== undefined) data.email = payload.email
+    if (payload.areaCity !== undefined) data.area_city = payload.areaCity
+    if (payload.status !== undefined) data.status = payload.status
+    if (payload.actions !== undefined) data.actions = payload.actions
+
+    await transaction.from('persons').where('id', supplier.personId).update(data)
     await transaction.commit()
 
     return { id: supplier.id, ...payload }

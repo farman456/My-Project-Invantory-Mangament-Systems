@@ -6,7 +6,7 @@ const fields = {
   saleOrderId: vine.number().positive().withoutDecimals().exists({ table: 'sale_orders', column: 'id' }),
   customerId: vine.number().positive().withoutDecimals().exists({ table: 'customers', column: 'id' }),
   voucherDetails: vine.string().trim().optional(),
-  noOfCartons: vine.number().positive().withoutDecimals(),
+  noOfCartons: vine.number().min(1).withoutDecimals(),
   transporters: vine.string().trim().maxLength(150).optional(),
   status: vine.string().trim().maxLength(20).optional(),
   actions: vine.string().trim().maxLength(50).optional(),

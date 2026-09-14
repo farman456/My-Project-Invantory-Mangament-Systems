@@ -31,6 +31,7 @@ import '#start/routes/manufacturer_routes'
 import '#start/routes/distributor_routes'
 import '#start/routes/category_routes'
 import '#start/routes/department_designation_routes'
+import '#start/routes/coa_routes'
 
 import { sendSuccess } from '#services/custom_response_service'
 

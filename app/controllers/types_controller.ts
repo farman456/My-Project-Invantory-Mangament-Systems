@@ -3,7 +3,9 @@ import ErrorService from '#services/error_service'
 import { createType, deleteType, getType, listTypes, updateType } from '#services/type_service'
 import {
   createTypeValidator,
+  typeListQueryValidator,
   typeIdValidator,
+  updateTypePatchValidator,
   updateTypeValidator,
 } from '#validators/type_validator'
 import { listPaginationValidator } from '#validators/list_pagination_validator'
@@ -19,7 +21,13 @@ export default class TypesController {
         perPage: perPage === undefined ? undefined : Number(perPage),
       })
       const options = await validateListQuery(ctx.request.qs())
-      const types = await listTypes(pagination.page, pagination.perPage, options)
+      const typeOptions = await typeListQueryValidator.validate({
+        investigationRequired: ctx.request.qs().investigationRequired,
+      })
+      const types = await listTypes(pagination.page, pagination.perPage, {
+        ...options,
+        ...typeOptions,
+      })
       return sendSuccess('Types listed successfully', types)
     } catch (error) {
       console.log('Types listing error', error)
@@ -52,7 +60,9 @@ export default class TypesController {
   public async update(ctx: HttpContext) {
     try {
       const { typeId } = await typeIdValidator.validate(ctx.params)
-      const payload = await updateTypeValidator.validate(ctx.request.body())
+      const payload = ctx.request.method() === 'PATCH'
+        ? await updateTypePatchValidator.validate(ctx.request.body())
+        : await updateTypeValidator.validate(ctx.request.body())
       const type = await updateType(payload, typeId)
       return sendSuccess('Type updated successfully', type)
     } catch (error) {

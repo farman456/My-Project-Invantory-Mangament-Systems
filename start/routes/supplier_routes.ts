@@ -9,6 +9,7 @@ router
     router.get('/', [SuppliersController, 'options'])
     router.get('/:supplierId', [SuppliersController, 'show'])
     router.put('/:supplierId', [SuppliersController, 'update'])
+    router.patch('/:supplierId', [SuppliersController, 'update'])
     router.delete('/:supplierId', [SuppliersController, 'destroy'])
   })
   .prefix('api/suppliers')

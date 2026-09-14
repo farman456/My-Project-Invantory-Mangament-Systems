@@ -10,6 +10,7 @@ import {
 import {
   createSupplierValidator,
   supplierIdValidator,
+  updateSupplierPatchValidator,
   updateSupplierValidator,
 } from '#validators/supplier_validator'
 import { listPaginationValidator } from '#validators/list_pagination_validator'
@@ -58,7 +59,9 @@ export default class SuppliersController {
   public async update(ctx: HttpContext) {
     try {
       const { supplierId } = await supplierIdValidator.validate(ctx.params)
-      const payload = await updateSupplierValidator.validate(ctx.request.body())
+      const payload = ctx.request.method() === 'PATCH'
+        ? await updateSupplierPatchValidator.validate(ctx.request.body())
+        : await updateSupplierValidator.validate(ctx.request.body())
       const supplier = await updateSupplier(payload, supplierId)
       return sendSuccess('Supplier updated successfully', supplier)
     } catch (error) {

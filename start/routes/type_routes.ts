@@ -9,6 +9,7 @@ router
     router.get('/:typeId', [TypesController, 'show'])
     router.post('/', [TypesController, 'store'])
     router.put('/:typeId', [TypesController, 'update'])
+    router.patch('/:typeId', [TypesController, 'update'])
     router.delete('/:typeId', [TypesController, 'destroy'])
   })
   .prefix('api/types')

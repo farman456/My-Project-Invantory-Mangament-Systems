@@ -30,7 +30,7 @@ export const createPurchaseReturnValidator = vine.compile(
     /**
      * Purchase_returns.no_of_cartons - positive integer value
      */
-    noOfCartons: vine.number().positive().withoutDecimals(),
+    noOfCartons: vine.number().min(1).withoutDecimals(),
     /**
      * Purchase_returns.refund_value decimal(12,2) - non-negative numeric value
      */
@@ -48,7 +48,7 @@ export const updatePurchaseReturnValidator = vine.compile(
     purchaseInvoiceId: vine.number().positive().withoutDecimals().exists({ table: 'purchase_invoices', column: 'id' }).optional(),
     supplierId: vine.number().positive().withoutDecimals().exists({ table: 'suppliers', column: 'id' }).optional(),
     returnDetails: vine.string().trim().optional(),
-    noOfCartons: vine.number().positive().withoutDecimals().optional(),
+    noOfCartons: vine.number().min(1).withoutDecimals().optional(),
     refundValue: vine.number().min(0).max(9999999999.99).optional(),
     status: vine.string().trim().maxLength(20).optional(),
     actions: vine.string().trim().maxLength(50).optional(),
