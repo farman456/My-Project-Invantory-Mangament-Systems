@@ -16,6 +16,27 @@ export default class Supplier extends BaseModel {
   @column()
   declare personId: number | null
 
+  @column()
+  declare name: string | null
+
+  @column()
+  declare contactPerson: string | null
+
+  @column()
+  declare phone: string | null
+
+  @column()
+  declare email: string | null
+
+  @column()
+  declare areaCity: string | null
+
+  @column()
+  declare status: string | null
+
+  @column()
+  declare actions: string | null
+
   @belongsTo(() => Person, { foreignKey: 'personId' })
   declare person: BelongsTo<typeof Person>
 

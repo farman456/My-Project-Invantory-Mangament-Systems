@@ -20,10 +20,10 @@ export const listSuppliers = async (page = 1, perPage = 25, options: ListQueryOp
       .select(
         'suppliers.id',
         'persons.name',
-        'persons.contact_person as contactPerson',
+        'persons.contact_person',
         'persons.phone',
         'persons.email',
-        'persons.area_city as areaCity',
+        'persons.area_city',
         'persons.status',
         'persons.actions'
       )
@@ -83,10 +83,10 @@ export const getSupplier = async (supplierId: number) => {
       .select(
         'suppliers.id',
         'persons.name',
-        'persons.contact_person as contactPerson',
+        'persons.contact_person',
         'persons.phone',
         'persons.email',
-        'persons.area_city as areaCity',
+        'persons.area_city',
         'persons.status',
         'persons.actions'
       )
@@ -159,10 +159,14 @@ export const deleteSupplier = async (supplierId: number) => {
     const databaseError = error as { code?: string; errno?: number }
     const message =
       databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451
-        ? 'Supplier cannot be deleted because it is referenced by another record'
+        ? 'Supplier cannot be deleted while related records exist'
         : error instanceof Error
           ? error.message
           : String(error)
-    throw new Error(`Error deleting supplier: ${message}`)
+    const deletionError = new Error(`Error deleting supplier: ${message}`) as Error & { code?: string }
+    if (databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451) {
+      deletionError.code = 'E_SUPPLIER_REFERENCED'
+    }
+    throw deletionError
   }
 }

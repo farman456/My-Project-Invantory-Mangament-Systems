@@ -186,6 +186,13 @@ export const deleteSubHead = async (subHeadId: number) => {
   await AccountSubHead.query().where('id', subHeadId).delete()
 }
 
+export const deleteAccountHead = async (accountHeadId: number) => {
+  const accountHead = await findHead(accountHeadId)
+  const childCount = await AccountSubHead.query().where('accountHeadId', accountHeadId).count('* as total')
+  if (Number(childCount[0].$extras.total) > 0) throw validationError('Account head cannot be deleted while sub-heads exist', 'headId')
+  await accountHead.delete()
+}
+
 export const deleteAccountName = async (accountNameId: number) => {
   const accountName = await AccountName.find(accountNameId)
   if (!accountName) throw notFoundError(`Account name with ID: ${accountNameId} does not exist`)

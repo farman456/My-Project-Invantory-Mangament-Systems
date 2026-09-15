@@ -189,11 +189,15 @@ export const deleteCustomer = async (customerId: number) => {
 
     const message =
       databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451
-        ? 'Customer cannot be deleted because it is referenced by another record'
+        ? 'Customer cannot be deleted while related records exist'
         : error instanceof Error
           ? error.message
           : String(error)
 
-    throw new Error(`Error deleting customer: ${message}`)
+    const deletionError = new Error(`Error deleting customer: ${message}`) as Error & { code?: string }
+    if (databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451) {
+      deletionError.code = 'E_CUSTOMER_REFERENCED'
+    }
+    throw deletionError
   }
 }

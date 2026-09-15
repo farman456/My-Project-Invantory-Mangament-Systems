@@ -15,6 +15,7 @@ router
     router.post('/names/bulk', [CoaController, 'createBulkNames'])
     router.patch('/sub-heads/:id', [CoaController, 'updateSubHead'])
     router.patch('/names/:id', [CoaController, 'updateName'])
+    router.delete('/heads/:id', [CoaController, 'deleteHead'])
     router.delete('/sub-heads/:id', [CoaController, 'deleteSubHead'])
     router.delete('/names/:id', [CoaController, 'deleteName'])
   })

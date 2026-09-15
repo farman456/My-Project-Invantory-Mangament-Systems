@@ -14,6 +14,7 @@ import {
   createAccountName,
   createAccountNames,
   createSubHead,
+  deleteAccountHead,
   deleteAccountName,
   deleteSubHead,
   getTree,
@@ -131,6 +132,16 @@ export default class CoaController {
       const { id } = await coaIdValidator.validate({ id: Number(ctx.params.id) })
       await deleteSubHead(id)
       return sendSuccess('Account sub-head deleted successfully')
+    } catch (error) {
+      return ErrorService.handleError(ctx, error)
+    }
+  }
+
+  async deleteHead(ctx: HttpContext) {
+    try {
+      const { id } = await coaIdValidator.validate({ id: Number(ctx.params.id) })
+      await deleteAccountHead(id)
+      return sendSuccess('Account head deleted successfully')
     } catch (error) {
       return ErrorService.handleError(ctx, error)
     }
