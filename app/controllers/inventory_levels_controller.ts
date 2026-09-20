@@ -1,7 +1,7 @@
 import { sendSuccess } from '#services/custom_response_service'
 import ErrorService from '#services/error_service'
-import { getInventoryLevel, listInventoryLevels } from '#services/inventory_level_service'
-import { inventoryLevelIdValidator } from '#validators/inventory_level_validator'
+import { createInventoryLevel, deleteInventoryLevel, getInventoryLevel, listInventoryLevels, updateInventoryLevel } from '#services/inventory_level_service'
+import { createInventoryLevelValidator, inventoryLevelIdValidator, updateInventoryLevelValidator } from '#validators/inventory_level_validator'
 import { listPaginationValidator } from '#validators/list_pagination_validator'
 import { validateListQuery } from '#validators/list_query_validator'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -30,6 +30,36 @@ export default class InventoryLevelsController {
       return sendSuccess('Inventory level retrieved successfully', inventoryLevel)
     } catch (error) {
       console.log('Inventory level retrieval error', error)
+      return ErrorService.handleError(ctx, error)
+    }
+  }
+
+  public async create(ctx: HttpContext) {
+    try {
+      return sendSuccess('Inventory level created successfully', await createInventoryLevel(await createInventoryLevelValidator.validate(ctx.request.body())))
+    } catch (error) {
+      return ErrorService.handleError(ctx, error)
+    }
+  }
+
+  public async update(ctx: HttpContext) {
+    try {
+      const { inventoryLevelId } = await inventoryLevelIdValidator.validate(ctx.params)
+      const payload = ctx.request.method() === 'PATCH'
+        ? await updateInventoryLevelValidator.validate(ctx.request.body())
+        : await createInventoryLevelValidator.validate(ctx.request.body())
+      return sendSuccess('Inventory level updated successfully', await updateInventoryLevel(inventoryLevelId, payload))
+    } catch (error) {
+      return ErrorService.handleError(ctx, error)
+    }
+  }
+
+  public async delete(ctx: HttpContext) {
+    try {
+      const { inventoryLevelId } = await inventoryLevelIdValidator.validate(ctx.params)
+      await deleteInventoryLevel(inventoryLevelId)
+      return sendSuccess('Inventory level deleted successfully')
+    } catch (error) {
       return ErrorService.handleError(ctx, error)
     }
   }

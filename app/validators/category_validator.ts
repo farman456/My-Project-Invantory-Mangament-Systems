@@ -3,6 +3,8 @@ import type { Infer } from '@vinejs/vine/types'
 
 const categoryFields = {
   name: vine.string().trim().minLength(1).maxLength(150),
+  description: vine.string().trim().maxLength(500).optional(),
+  isActive: vine.boolean().optional(),
   contactPerson: vine.string().trim().maxLength(150).optional(),
   phone: vine.string().trim().maxLength(30).optional(),
   email: vine.string().trim().email().maxLength(150).optional(),
@@ -20,6 +22,8 @@ export type updateCategoryValidatorInterface = Infer<typeof updateCategoryValida
 export const updateCategoryPatchValidator = vine.compile(
   vine.object({
     name: categoryFields.name.optional(),
+    description: categoryFields.description,
+    isActive: categoryFields.isActive,
     contactPerson: categoryFields.contactPerson,
     phone: categoryFields.phone,
     email: categoryFields.email,

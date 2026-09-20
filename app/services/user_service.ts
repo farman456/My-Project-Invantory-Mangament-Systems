@@ -8,6 +8,7 @@ import { paginateQuery } from '#services/apply_pagination'
 import { applyFilters } from '#services/apply_filter'
 import { applyListQuery } from '#helpers/list_query_helper'
 import type { ListQueryOptions } from '#validators/list_query_validator'
+import { recordSoftDeletedUser } from '#services/recycle_bin_service'
 
 export const userListing = async (
   page?: number,
@@ -74,11 +75,13 @@ export const getUserById = async (userId: number) => {
   }
 }
 
-export const deleteUser = async (user_id: number) => {
+export const deleteUser = async (user_id: number, deletedBy: number | null = null) => {
   try {
     const user = await getUserById(user_id)
 
-    return await user.softDelete()
+    const snapshot = { id: user.id, name: user.name, email: user.email, roleId: user.roleId, status: user.status }
+    await user.softDelete()
+    return await recordSoftDeletedUser(snapshot, deletedBy)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     throw new Error(`Error deleting user: ${message}`)

@@ -1,6 +1,19 @@
 import InventoryLevel from '#models/inventory_level'
 import { applyListQuery } from '#helpers/list_query_helper'
 import type { ListQueryOptions } from '#validators/list_query_validator'
+import type { InventoryLevelPayload, InventoryLevelUpdatePayload } from '#validators/inventory_level_validator'
+
+export const createInventoryLevel = (payload: InventoryLevelPayload) => InventoryLevel.create(payload)
+
+export const updateInventoryLevel = async (id: number, payload: InventoryLevelUpdatePayload) => {
+  const item = await getInventoryLevel(id)
+  return item.merge(payload).save()
+}
+
+export const deleteInventoryLevel = async (id: number) => {
+  const item = await getInventoryLevel(id)
+  await item.delete()
+}
 
 export const listInventoryLevels = async (page = 1, perPage = 25, options: ListQueryOptions = {}) => {
   try {

@@ -2,6 +2,7 @@ import db from '@adonisjs/lucid/services/db'
 import Manufacturer from '#models/manufacturer'
 import { applyListQuery } from '#helpers/list_query_helper'
 import type { ListQueryOptions } from '#validators/list_query_validator'
+import { personConfigurationSelect, toPersonData } from '#helpers/person_fields'
 import {
   createManufacturerValidatorInterface,
   updateManufacturerPatchValidatorInterface,
@@ -18,6 +19,7 @@ const personSelect = [
   'persons.area_city as areaCity',
   'persons.status',
   'persons.actions',
+  ...personConfigurationSelect,
 ]
 
 export const listManufacturers = async (page = 1, perPage = 100, options: ListQueryOptions = {}) => {
@@ -50,20 +52,32 @@ export const listManufacturers = async (page = 1, perPage = 100, options: ListQu
 export const createManufacturer = async (payload: createManufacturerValidatorInterface) => {
   const transaction = await db.transaction()
   try {
-    const [personId] = await transaction.table('persons').insert({
-      name: payload.name,
-      contact_person: payload.contactPerson,
-      phone: payload.phone,
-      email: payload.email,
-      area_city: payload.areaCity,
-      status: payload.status,
-      actions: payload.actions,
-    })
-    const [manufacturerId] = await transaction.table('manufacturers').insert({ person_id: personId })
+    if (payload.email) {
+      const existingPerson = await transaction
+        .from('persons')
+        .whereRaw('LOWER(email) = LOWER(?)', [payload.email])
+        .first()
+
+      if (existingPerson) {
+        const error = new Error('Manufacturer email already exists') as Error & {
+          code?: string
+          messages?: Array<{ message: string; rule: string; field: string }>
+        }
+        error.code = 'E_VALIDATION_ERROR'
+        error.messages = [{ message: 'Manufacturer email already exists', rule: 'unique', field: 'email' }]
+        throw error
+      }
+    }
+
+    const [{ id: personId }] = await transaction.table('persons').insert(toPersonData(payload)).returning('id')
+    const [{ id: manufacturerId }] = await transaction.table('manufacturers').insert({ person_id: personId }).returning('id')
     await transaction.commit()
     return { id: manufacturerId, personId, ...payload }
   } catch (error) {
     await transaction.rollback()
+    if (error instanceof Error && (error as Error & { code?: string }).code === 'E_VALIDATION_ERROR') {
+      throw error
+    }
     const message = error instanceof Error ? error.message : String(error)
     throw new Error(`Error creating manufacturer: ${message}`)
   }
@@ -95,13 +109,7 @@ export const updateManufacturer = async (
     if (!manufacturer) throw new Error(`Manufacturer with ID: ${manufacturerId} does not exist`)
     if (!manufacturer.personId) throw new Error(`Manufacturer with ID: ${manufacturerId} has no person record`)
     const data: Record<string, unknown> = {}
-    if (payload.name !== undefined) data.name = payload.name
-    if (payload.contactPerson !== undefined) data.contact_person = payload.contactPerson
-    if (payload.phone !== undefined) data.phone = payload.phone
-    if (payload.email !== undefined) data.email = payload.email
-    if (payload.areaCity !== undefined) data.area_city = payload.areaCity
-    if (payload.status !== undefined) data.status = payload.status
-    if (payload.actions !== undefined) data.actions = payload.actions
+    Object.assign(data, toPersonData(payload))
     await transaction.from('persons').where('id', manufacturer.personId).update(data)
     await transaction.commit()
     return { id: manufacturer.id, personId: manufacturer.personId, ...payload }
@@ -124,7 +132,10 @@ export const deleteManufacturer = async (manufacturerId: number) => {
   } catch (error) {
     await transaction.rollback()
     const databaseError = error as { code?: string; errno?: number }
-    const message = databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451
+    const message =
+      databaseError.code === 'ER_ROW_IS_REFERENCED_2' ||
+      databaseError.code === '23503' ||
+      databaseError.errno === 1451
       ? 'Manufacturer cannot be deleted because it is referenced by another record'
       : error instanceof Error ? error.message : String(error)
     throw new Error(`Error deleting manufacturer: ${message}`)

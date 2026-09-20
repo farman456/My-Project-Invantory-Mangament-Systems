@@ -22,6 +22,33 @@ export default class Person extends BaseModel {
   declare areaCity: string | null
 
   @column()
+  declare licenseNumber: string | null
+
+  @column()
+  declare licenseExpiryDate: string | null
+
+  @column()
+  declare taxNumber: string | null
+
+  @column()
+  declare taxType: string | null
+
+  @column()
+  declare taxStatus: string | null
+
+  @column()
+  declare gstStatus: string | null
+
+  @column()
+  declare isActive: boolean
+
+  @column()
+  declare alsoCustomer: boolean
+
+  @column()
+  declare alsoSupplier: boolean
+
+  @column()
   declare status: string | null
 
   @column()

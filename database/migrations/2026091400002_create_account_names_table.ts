@@ -6,7 +6,7 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.integer('account_sub_head_id').unsigned().notNullable().references('id').inTable('account_sub_heads').onDelete('RESTRICT')
+      table.integer('account_sub_head_id').notNullable().references('id').inTable('account_sub_heads').onDelete('RESTRICT')
       table.string('name', 150).notNullable()
       table.string('status', 20).notNullable().defaultTo('active')
       table.unique(['account_sub_head_id', 'name'])

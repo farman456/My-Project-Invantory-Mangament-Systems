@@ -18,8 +18,14 @@ export default class Type extends BaseModel {
   @column()
   declare name: string | null
 
+  @column()
+  declare description: string | null
+
   @column({ columnName: 'investigation_required' })
   declare investigationRequired: boolean | null
+
+  @column()
+  declare status: string | null
 
   @hasMany(() => Product, { foreignKey: 'typeId' })
   declare products: HasMany<typeof Product>

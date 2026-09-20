@@ -4,6 +4,8 @@ import type { Infer } from '@vinejs/vine/types'
 export const createTypeValidator = vine.compile(
   vine.object({
     name: vine.string().trim().minLength(1).maxLength(150),
+    description: vine.string().trim().maxLength(500),
+    status: vine.string().trim().maxLength(20).optional(),
     investigationRequired: vine.boolean().optional(),
   })
 )
@@ -13,6 +15,8 @@ export type createTypeValidatorInterface = Infer<typeof createTypeValidator>
 export const updateTypeValidator = vine.compile(
   vine.object({
     name: vine.string().trim().minLength(1).maxLength(150),
+    description: vine.string().trim().maxLength(500),
+    status: vine.string().trim().maxLength(20).optional(),
     investigationRequired: vine.boolean().optional(),
   })
 )
@@ -22,6 +26,8 @@ export type updateTypeValidatorInterface = Infer<typeof updateTypeValidator>
 export const updateTypePatchValidator = vine.compile(
   vine.object({
     name: vine.string().trim().minLength(1).maxLength(150).optional(),
+    description: vine.string().trim().maxLength(500).optional(),
+    status: vine.string().trim().maxLength(20).optional(),
     investigationRequired: vine.boolean().optional(),
   })
 )

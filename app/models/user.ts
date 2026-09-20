@@ -8,6 +8,7 @@ import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import { softDeleteQuery, softDeleteUser } from '#helpers/soft_delete_helper'
 import Person from '#models/person'
 import Role from '#models/role'
+import DepartmentDesignation from '#models/department_designation'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -39,6 +40,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare roleType: string | null
 
   @column()
+  declare designationId: number | null
+
+  @column()
   declare status: string
 
   @column()
@@ -61,6 +65,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @belongsTo(() => Role, { foreignKey: 'roleId' })
   declare role: BelongsTo<typeof Role>
+
+  @belongsTo(() => DepartmentDesignation, { foreignKey: 'designationId' })
+  declare designation: BelongsTo<typeof DepartmentDesignation>
 
   static accessTokens = DbAccessTokensProvider.forModel(User, {
     expiresIn: '30 days',

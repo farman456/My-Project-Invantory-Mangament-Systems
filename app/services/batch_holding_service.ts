@@ -16,7 +16,10 @@ export const listBatchHoldings = async (page = 1, perPage = 25, options: ListQue
     if (options.type !== undefined) query.where('batch_holdings.type', options.type)
     if (options.status !== undefined) query.where('batch_holdings.status', options.status)
     if (options.productId !== undefined) {
-      query.whereRaw('JSON_CONTAINS(batch_holdings.batch_details, JSON_OBJECT(?, ?), ?)', ['productId', options.productId, '$.items'])
+      query.whereRaw(
+        "(batch_holdings.batch_details::jsonb -> 'items') @> jsonb_build_array(jsonb_build_object('productId', ?::int))",
+        [options.productId]
+      )
     }
     const paginator = await query
       .select('id', 'batch_details', 'supplier', 'type', 'status', 'action')

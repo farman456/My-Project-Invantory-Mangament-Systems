@@ -15,4 +15,25 @@ export const listSaleOrders = async (page = 1, perPage = 25, options: ListQueryO
 export const getSaleOrder = async (id: number) => { const record = await SaleOrder.find(id); if (!record) throw new Error(`Sale order with ID: ${id} does not exist`); return record }
 export const createSaleOrder = async (payload: createSaleOrderValidatorInterface) => { try { return await SaleOrder.create(payload) } catch (error) { throw new Error(`Error creating sale order: ${error instanceof Error ? error.message : String(error)}`) } }
 export const updateSaleOrder = async (payload: updateSaleOrderValidatorInterface, id: number) => { const record = await getSaleOrder(id); return record.merge(payload).save() }
-export const deleteSaleOrder = async (id: number) => { const record = await getSaleOrder(id); await record.delete() }
+export const deleteSaleOrder = async (id: number) => {
+  const record = await getSaleOrder(id)
+  try {
+    await record.delete()
+  } catch (error) {
+    const databaseError = error as { code?: string; errno?: number }
+    const message = error instanceof Error ? error.message : String(error)
+    const deletionError = new Error(`Error deleting sale order: ${message}`) as Error & {
+      code?: string
+      errno?: number
+    }
+    if (
+      databaseError.code === 'ER_ROW_IS_REFERENCED_2' ||
+      databaseError.code === '23503' ||
+      databaseError.errno === 1451
+    ) {
+      deletionError.code = '23503'
+      deletionError.errno = 1451
+    }
+    throw deletionError
+  }
+}

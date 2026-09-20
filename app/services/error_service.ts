@@ -105,10 +105,10 @@ export default class ErrorService {
           message: this.getErrorCode(error) === 'E_CUSTOMER_REFERENCED'
             ? 'Customer cannot be deleted while related records exist'
             : this.getErrorCode(error) === 'E_SUPPLIER_REFERENCED'
-            ? 'Supplier cannot be deleted while related records exist'
-            : this.isDuplicateError(error)
-            ? 'A record with the same unique value already exists'
-            : 'The resource cannot be changed because it is referenced by another record',
+              ? 'Supplier cannot be deleted while related records exist'
+              : this.isDuplicateError(error)
+                ? 'A record with the same unique value already exists'
+                : 'The resource cannot be changed because it is referenced by another record',
           rule: 'conflict',
           field: 'unknown',
         },
@@ -175,9 +175,17 @@ export default class ErrorService {
       return this.handleConflictError(ctx, error)
     }
 
+    const isReferencedDeleteProtection =
+      this.getErrorCode(error) === 'ER_ROW_IS_REFERENCED_2' ||
+      error?.errno === 1451 ||
+      this.getErrorMessage(error).toLowerCase().includes('referenced') ||
+      this.getErrorMessage(error).toLowerCase().includes('parent row') ||
+      (this.getErrorCode(error) === '23503' &&
+        this.getErrorMessage(error).toLowerCase().includes('update or delete'))
+
     if (
       this.isDuplicateError(error) ||
-      (this.isForeignKeyError(error) && this.getErrorMessage(error).includes('referenced'))
+      (this.isForeignKeyError(error) && isReferencedDeleteProtection)
     ) {
       return this.handleConflictError(ctx, error)
     }

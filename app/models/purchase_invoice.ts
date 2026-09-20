@@ -21,8 +21,17 @@ export default class PurchaseInvoice extends BaseModel {
   @column()
   declare supplierId: number | null
 
-  @column()
-  declare invoiceDetails: string | null
+  @column({
+    serialize: (value: string | null) => {
+      if (!value) return value
+      try {
+        return JSON.parse(value)
+      } catch {
+        return value
+      }
+    },
+  })
+  declare invoiceDetails: Record<string, unknown> | string | null
 
   @column()
   declare name: string | null

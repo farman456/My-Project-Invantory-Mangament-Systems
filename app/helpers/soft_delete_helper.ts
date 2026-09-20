@@ -3,6 +3,7 @@ import { BaseModel } from '@adonisjs/lucid/orm'
 import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 import { DateTime } from 'luxon'
 import { cuid } from '@adonisjs/core/helpers'
+import db from '@adonisjs/lucid/services/db'
 
 export const softDeleteQuery = (query: ModelQueryBuilderContract<typeof BaseModel>) => {
   query.whereNull(`${query.model.table}.deleted_at`)
@@ -15,5 +16,5 @@ export const softDeleteUser = async (row: User) => {
     row.deletedAt = DateTime.now()
     row['email'] = deleteEmail.concat('_', rand)
   }
-  await row.save()
+  await db.from('users').where('id', row.id).update({ email: row['email'], deleted_at: row.deletedAt.toJSDate() })
 }

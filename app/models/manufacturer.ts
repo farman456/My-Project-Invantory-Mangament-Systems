@@ -1,6 +1,7 @@
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Person from '#models/person'
+import Product from '#models/product'
 
 export default class Manufacturer extends BaseModel {
   static table = 'manufacturers'
@@ -13,4 +14,7 @@ export default class Manufacturer extends BaseModel {
 
   @belongsTo(() => Person, { foreignKey: 'personId' })
   declare person: BelongsTo<typeof Person>
+
+  @hasMany(() => Product, { foreignKey: 'manufacturerId' })
+  declare products: HasMany<typeof Product>
 }

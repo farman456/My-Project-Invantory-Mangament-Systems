@@ -10,7 +10,7 @@ export default class extends BaseSchema {
 
       table.increments('id')
 
-      table.integer('person_id').unsigned().references('id').inTable('persons')
+      table.integer('person_id').references('id').inTable('persons')
 
     })
 

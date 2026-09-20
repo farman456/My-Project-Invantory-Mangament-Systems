@@ -12,6 +12,33 @@ export const createProductValidator = vine.compile(
      */
     type: vine.number().positive().withoutDecimals().exists({ table: 'types', column: 'id' }),
     /**
+     * Products.category references categories.id
+     */
+    category: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'categories', column: 'id' })
+      .optional(),
+    /**
+     * Products.distributor references distributors.id
+     */
+    distributor: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'distributors', column: 'id' })
+      .optional(),
+    /**
+     * Products.manufacturer references manufacturers.id
+     */
+    manufacturer: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'manufacturers', column: 'id' })
+      .optional(),
+    /**
      * Products.supplier references suppliers.id
      */
     supplier: vine
@@ -41,6 +68,24 @@ export const updateProductValidator = vine.compile(
   vine.object({
     name: vine.string().trim().minLength(1).maxLength(150),
     type: vine.number().positive().withoutDecimals().exists({ table: 'types', column: 'id' }),
+    category: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'categories', column: 'id' })
+      .optional(),
+    distributor: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'distributors', column: 'id' })
+      .optional(),
+    manufacturer: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'manufacturers', column: 'id' })
+      .optional(),
     supplier: vine
       .number()
       .positive()
@@ -62,6 +107,24 @@ export const updateProductPatchValidator = vine.compile(
       .positive()
       .withoutDecimals()
       .exists({ table: 'types', column: 'id' })
+      .optional(),
+    category: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'categories', column: 'id' })
+      .optional(),
+    distributor: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'distributors', column: 'id' })
+      .optional(),
+    manufacturer: vine
+      .number()
+      .positive()
+      .withoutDecimals()
+      .exists({ table: 'manufacturers', column: 'id' })
       .optional(),
     supplier: vine
       .number()

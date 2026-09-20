@@ -16,7 +16,10 @@ export const listExpiryDamage = async (page = 1, perPage = 25, options: ListQuer
     if (options.type !== undefined) query.where('expiry_damage.type', options.type)
     if (options.status !== undefined) query.where('expiry_damage.status', options.status)
     if (options.productId !== undefined) {
-      query.whereRaw('JSON_CONTAINS(expiry_damage.ed_details, JSON_OBJECT(?, ?), ?)', ['productId', options.productId, '$.items'])
+      query.whereRaw(
+        "(expiry_damage.ed_details::jsonb -> 'items') @> jsonb_build_array(jsonb_build_object('productId', ?::int))",
+        [options.productId]
+      )
     }
     const paginator = await query
       .select('id', 'ed_details', 'supplier', 'type', 'status', 'actions')

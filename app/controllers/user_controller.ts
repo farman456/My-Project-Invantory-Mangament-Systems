@@ -73,7 +73,7 @@ export default class UsersController {
   public async delete(ctx: HttpContext) {
     try {
       const { userId } = await userIdValidator.validate(ctx.params)
-      await deleteUser(userId)
+      await deleteUser(userId, ctx.auth.getUserOrFail().id)
       return sendSuccess('User deleted successfully')
     } catch (error) {
       console.log('User deleting error', error)

@@ -170,7 +170,7 @@ test.group('Expiry Damage PUT/PATCH validation', () => {
   })
 
   test('PATCH rejects an invalid supplied data type', async ({ assert }) => {
-    const error = await validationError(updateExpiryDamageValidator, { supplier: true })
+    const error = await validationError(updateExpiryDamageValidator, { supplier: 'not-a-number' })
     assert.isNotNull(error)
     assert.isTrue(hasRule(error, 'number'))
   })

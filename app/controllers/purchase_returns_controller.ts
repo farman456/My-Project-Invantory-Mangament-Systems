@@ -15,6 +15,7 @@ import {
 import { listPaginationValidator } from '#validators/list_pagination_validator'
 import { validateListQuery } from '#validators/list_query_validator'
 import type { HttpContext } from '@adonisjs/core/http'
+import { normalizePurchaseReturnPayload } from '#helpers/purchase_payload_helper'
 
 export default class PurchaseReturnsController {
   public async index(ctx: HttpContext) {
@@ -40,7 +41,7 @@ export default class PurchaseReturnsController {
 
   public async create(ctx: HttpContext) {
     try {
-      const payload = await createPurchaseReturnValidator.validate(ctx.request.body())
+      const payload = await createPurchaseReturnValidator.validate(normalizePurchaseReturnPayload(ctx.request.body()))
       const purchaseReturn = await createPurchaseReturn(payload)
       return sendSuccess('Purchase return created successfully', purchaseReturn)
     } catch (error) {
@@ -52,7 +53,8 @@ export default class PurchaseReturnsController {
   public async update(ctx: HttpContext) {
     try {
       const { purchaseReturnId } = await purchaseReturnIdValidator.validate(ctx.params)
-      const payload = ctx.request.method() === 'PATCH' ? await updatePurchaseReturnValidator.validate(ctx.request.body()) : await createPurchaseReturnValidator.validate(ctx.request.body())
+      const normalized = normalizePurchaseReturnPayload(ctx.request.body())
+      const payload = ctx.request.method() === 'PATCH' ? await updatePurchaseReturnValidator.validate(normalized) : await createPurchaseReturnValidator.validate(normalized)
       return sendSuccess('Purchase return updated successfully', await updatePurchaseReturn(payload, purchaseReturnId))
     } catch (error) {
       console.log('Purchase return updating error', error)

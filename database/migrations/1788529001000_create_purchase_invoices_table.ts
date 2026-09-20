@@ -6,8 +6,8 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.integer('purchase_order_id').unsigned().references('id').inTable('purchase_orders')
-      table.integer('supplier_id').unsigned().references('id').inTable('suppliers')
+      table.integer('purchase_order_id').references('id').inTable('purchase_orders')
+      table.integer('supplier_id').references('id').inTable('suppliers')
       table.text('invoice_details')
       table.string('name', 150)
       table.integer('no_of_items')

@@ -56,10 +56,12 @@ export const listSubHeads = async (headId: number, options: ListOptions = {}) =>
 export const listNames = async (subHeadId: number, options: ListOptions = {}) => {
   const subHead = await AccountSubHead.find(subHeadId)
   if (!subHead) throw notFoundError(`Account sub-head with ID: ${subHeadId} does not exist`)
-  const query = AccountName.query().where('account_names.account_sub_head_id', subHeadId)
-  if (options.search) query.whereILike('account_names.name', `%${options.search}%`)
-  if (options.status !== undefined) query.where('account_names.status', options.status)
+
+  const query = AccountName.query().where('account_sub_head_id', subHeadId)
+  if (options.search) query.whereILike('name', `%${options.search}%`)
+  if (options.status !== undefined) query.where('status', options.status)
   query.orderBy(options.sortBy === 'name' ? 'name' : 'id', options.sortOrder === 'desc' ? 'desc' : 'asc')
+
   const paginator = await query.paginate(pageOptions(options).page, pageOptions(options).perPage)
   return {
     items: paginator.all(),
@@ -122,7 +124,8 @@ const assertSubHeadParent = async (headId: number, subHeadId: number) => {
 }
 
 export const createSubHead = async (payload: CreateSubHeadPayload) => {
-  await findHead(payload.headId)
+  const head = await AccountHead.find(payload.headId)
+  if (!head) throw validationError(`Account head with ID: ${payload.headId} does not exist`, 'headId')
   const duplicate = await AccountSubHead.query().where('accountHeadId', payload.headId).where('name', payload.name).first()
   if (duplicate) throw validationError('A sub-head with this name already exists under the selected account head', 'name')
   return AccountSubHead.create({ accountHeadId: payload.headId, name: payload.name, status: payload.status ?? 'active' })
@@ -170,9 +173,15 @@ export const createAccountNames = async (payload: BulkAccountNamesPayload) => {
   const transaction = await db.transaction()
   try {
     const records = []
-    for (const name of payload.names) records.push(await transaction.table('account_names').insert({ account_sub_head_id: payload.subHeadId, name, status: payload.status ?? 'active' }))
+    for (const name of payload.names) {
+      const [record] = await transaction
+        .table('account_names')
+        .insert({ account_sub_head_id: payload.subHeadId, name, status: payload.status ?? 'active' })
+        .returning('id')
+      records.push(record.id)
+    }
     await transaction.commit()
-    return AccountName.query().whereIn('id', records.map((record) => record[0]))
+    return AccountName.query().whereIn('id', records)
   } catch (error) {
     await transaction.rollback()
     throw error

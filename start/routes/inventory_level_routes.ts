@@ -7,6 +7,10 @@ router
   .group(() => {
     router.get('/', [InventoryLevelsController, 'index'])
     router.get('/:inventoryLevelId', [InventoryLevelsController, 'show'])
+    router.post('/', [InventoryLevelsController, 'create'])
+    router.put('/:inventoryLevelId', [InventoryLevelsController, 'update'])
+    router.patch('/:inventoryLevelId', [InventoryLevelsController, 'update'])
+    router.delete('/:inventoryLevelId', [InventoryLevelsController, 'delete'])
   })
   .prefix('api/inventory-levels')
   .use([middleware.auth(), middleware.authorize()])

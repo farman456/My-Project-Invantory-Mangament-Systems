@@ -2,6 +2,7 @@ import db from '@adonisjs/lucid/services/db'
 import Category from '#models/category'
 import { applyListQuery } from '#helpers/list_query_helper'
 import type { ListQueryOptions } from '#validators/list_query_validator'
+import { personConfigurationSelect, toPersonData } from '#helpers/person_fields'
 import {
   createCategoryValidatorInterface,
   updateCategoryPatchValidatorInterface,
@@ -18,6 +19,8 @@ const personSelect = [
   'persons.area_city as areaCity',
   'persons.status',
   'persons.actions',
+  'categories.description',
+  ...personConfigurationSelect,
 ]
 
 export const listCategories = async (page = 1, perPage = 100, options: ListQueryOptions = {}) => {
@@ -46,16 +49,11 @@ export const listCategories = async (page = 1, perPage = 100, options: ListQuery
 export const createCategory = async (payload: createCategoryValidatorInterface) => {
   const transaction = await db.transaction()
   try {
-    const [personId] = await transaction.table('persons').insert({
-      name: payload.name,
-      contact_person: payload.contactPerson,
-      phone: payload.phone,
-      email: payload.email,
-      area_city: payload.areaCity,
-      status: payload.status,
-      actions: payload.actions,
-    })
-    const [categoryId] = await transaction.table('categories').insert({ person_id: personId })
+    const [{ id: personId }] = await transaction.table('persons').insert(toPersonData(payload)).returning('id')
+    const [{ id: categoryId }] = await transaction.table('categories').insert({
+      person_id: personId,
+      description: payload.description,
+    }).returning('id')
     await transaction.commit()
     return { id: categoryId, personId, ...payload }
   } catch (error) {
@@ -91,14 +89,11 @@ export const updateCategory = async (
     if (!category) throw new Error(`Category with ID: ${categoryId} does not exist`)
     if (!category.personId) throw new Error(`Category with ID: ${categoryId} has no person record`)
     const data: Record<string, unknown> = {}
-    if (payload.name !== undefined) data.name = payload.name
-    if (payload.contactPerson !== undefined) data.contact_person = payload.contactPerson
-    if (payload.phone !== undefined) data.phone = payload.phone
-    if (payload.email !== undefined) data.email = payload.email
-    if (payload.areaCity !== undefined) data.area_city = payload.areaCity
-    if (payload.status !== undefined) data.status = payload.status
-    if (payload.actions !== undefined) data.actions = payload.actions
+    Object.assign(data, toPersonData(payload))
     await transaction.from('persons').where('id', category.personId).update(data)
+    if (payload.description !== undefined) {
+      await transaction.from('categories').where('id', categoryId).update({ description: payload.description })
+    }
     await transaction.commit()
     return { id: category.id, personId: category.personId, ...payload }
   } catch (error) {
@@ -120,7 +115,7 @@ export const deleteCategory = async (categoryId: number) => {
   } catch (error) {
     await transaction.rollback()
     const databaseError = error as { code?: string; errno?: number }
-    const message = databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451
+    const message = databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.code === '23503' || databaseError.errno === 1451
       ? 'Category cannot be deleted because it is referenced by another record'
       : error instanceof Error ? error.message : String(error)
     throw new Error(`Error deleting category: ${message}`)

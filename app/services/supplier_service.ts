@@ -7,6 +7,7 @@ import {
 import db from '@adonisjs/lucid/services/db'
 import { applyListQuery } from '#helpers/list_query_helper'
 import type { ListQueryOptions } from '#validators/list_query_validator'
+import { personConfigurationSelect, toPersonData } from '#helpers/person_fields'
 
 export const listSuppliers = async (page = 1, perPage = 25, options: ListQueryOptions = {}) => {
   try {
@@ -25,7 +26,8 @@ export const listSuppliers = async (page = 1, perPage = 25, options: ListQueryOp
         'persons.email',
         'persons.area_city',
         'persons.status',
-        'persons.actions'
+        'persons.actions',
+        ...personConfigurationSelect
       )
       .paginate(page, perPage)
 
@@ -48,23 +50,15 @@ export const createSupplier = async (payload: createSupplierValidatorInterface) 
   const transaction = await db.transaction()
 
   try {
-    const personResult = await transaction.table('persons').insert({
-      name: payload.name,
-      contact_person: payload.contactPerson,
-      phone: payload.phone,
-      email: payload.email,
-      area_city: payload.areaCity,
-      status: payload.status,
-      actions: payload.actions,
-    })
+    const [personResult] = await transaction.table('persons').insert(toPersonData(payload)).returning('id')
 
-    const personId = personResult[0]
+    const personId = personResult.id
 
-    const supplierResult = await transaction.table('suppliers').insert({
+    const [supplierResult] = await transaction.table('suppliers').insert({
       person_id: personId,
-    })
+    }).returning('id')
 
-    const supplierId = supplierResult[0]
+    const supplierId = supplierResult.id
 
     await transaction.commit()
 
@@ -88,7 +82,8 @@ export const getSupplier = async (supplierId: number) => {
         'persons.email',
         'persons.area_city',
         'persons.status',
-        'persons.actions'
+        'persons.actions',
+        ...personConfigurationSelect
       )
       .where('suppliers.id', supplierId)
       .first()
@@ -120,13 +115,7 @@ export const updateSupplier = async (
     }
 
     const data: Record<string, unknown> = {}
-    if (payload.name !== undefined) data.name = payload.name
-    if (payload.contactPerson !== undefined) data.contact_person = payload.contactPerson
-    if (payload.phone !== undefined) data.phone = payload.phone
-    if (payload.email !== undefined) data.email = payload.email
-    if (payload.areaCity !== undefined) data.area_city = payload.areaCity
-    if (payload.status !== undefined) data.status = payload.status
-    if (payload.actions !== undefined) data.actions = payload.actions
+    Object.assign(data, toPersonData(payload))
 
     await transaction.from('persons').where('id', supplier.personId).update(data)
     await transaction.commit()
@@ -158,13 +147,19 @@ export const deleteSupplier = async (supplierId: number) => {
     await transaction.rollback()
     const databaseError = error as { code?: string; errno?: number }
     const message =
-      databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451
+      databaseError.code === 'ER_ROW_IS_REFERENCED_2' ||
+      databaseError.code === '23503' ||
+      databaseError.errno === 1451
         ? 'Supplier cannot be deleted while related records exist'
         : error instanceof Error
           ? error.message
           : String(error)
     const deletionError = new Error(`Error deleting supplier: ${message}`) as Error & { code?: string }
-    if (databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451) {
+    if (
+      databaseError.code === 'ER_ROW_IS_REFERENCED_2' ||
+      databaseError.code === '23503' ||
+      databaseError.errno === 1451
+    ) {
       deletionError.code = 'E_SUPPLIER_REFERENCED'
     }
     throw deletionError

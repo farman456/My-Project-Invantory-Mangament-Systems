@@ -2,6 +2,7 @@ import db from '@adonisjs/lucid/services/db'
 import Distributor from '#models/distributor'
 import { applyListQuery } from '#helpers/list_query_helper'
 import type { ListQueryOptions } from '#validators/list_query_validator'
+import { personConfigurationSelect, toPersonData } from '#helpers/person_fields'
 import {
   createDistributorValidatorInterface,
   updateDistributorPatchValidatorInterface,
@@ -18,6 +19,7 @@ const personSelect = [
   'persons.area_city as areaCity',
   'persons.status',
   'persons.actions',
+  ...personConfigurationSelect,
 ]
 
 export const listDistributors = async (page = 1, perPage = 100, options: ListQueryOptions = {}) => {
@@ -46,16 +48,8 @@ export const listDistributors = async (page = 1, perPage = 100, options: ListQue
 export const createDistributor = async (payload: createDistributorValidatorInterface) => {
   const transaction = await db.transaction()
   try {
-    const [personId] = await transaction.table('persons').insert({
-      name: payload.name,
-      contact_person: payload.contactPerson,
-      phone: payload.phone,
-      email: payload.email,
-      area_city: payload.areaCity,
-      status: payload.status,
-      actions: payload.actions,
-    })
-    const [distributorId] = await transaction.table('distributors').insert({ person_id: personId })
+    const [{ id: personId }] = await transaction.table('persons').insert(toPersonData(payload)).returning('id')
+    const [{ id: distributorId }] = await transaction.table('distributors').insert({ person_id: personId }).returning('id')
     await transaction.commit()
     return { id: distributorId, personId, ...payload }
   } catch (error) {
@@ -91,13 +85,7 @@ export const updateDistributor = async (
     if (!distributor) throw new Error(`Distributor with ID: ${distributorId} does not exist`)
     if (!distributor.personId) throw new Error(`Distributor with ID: ${distributorId} has no person record`)
     const data: Record<string, unknown> = {}
-    if (payload.name !== undefined) data.name = payload.name
-    if (payload.contactPerson !== undefined) data.contact_person = payload.contactPerson
-    if (payload.phone !== undefined) data.phone = payload.phone
-    if (payload.email !== undefined) data.email = payload.email
-    if (payload.areaCity !== undefined) data.area_city = payload.areaCity
-    if (payload.status !== undefined) data.status = payload.status
-    if (payload.actions !== undefined) data.actions = payload.actions
+    Object.assign(data, toPersonData(payload))
     await transaction.from('persons').where('id', distributor.personId).update(data)
     await transaction.commit()
     return { id: distributor.id, personId: distributor.personId, ...payload }
@@ -120,7 +108,10 @@ export const deleteDistributor = async (distributorId: number) => {
   } catch (error) {
     await transaction.rollback()
     const databaseError = error as { code?: string; errno?: number }
-    const message = databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451
+    const message =
+      databaseError.code === 'ER_ROW_IS_REFERENCED_2' ||
+      databaseError.code === '23503' ||
+      databaseError.errno === 1451
       ? 'Distributor cannot be deleted because it is referenced by another record'
       : error instanceof Error ? error.message : String(error)
     throw new Error(`Error deleting distributor: ${message}`)

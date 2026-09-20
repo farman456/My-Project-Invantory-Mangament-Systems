@@ -15,8 +15,8 @@ export default class DeliveryVoucher extends BaseModel {
   @column()
   declare customerId: number | null
 
-  @column()
-  declare voucherDetails: string | null
+  @column({ serialize: (value: string | null) => { if (!value) return value; try { return JSON.parse(value) } catch { return value } } })
+  declare voucherDetails: Record<string, unknown> | string | null
 
   @column()
   declare name: string | null

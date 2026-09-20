@@ -23,7 +23,7 @@ export const listTypes = async (page = 1, perPage = 100, options: TypeListQueryO
       query.where('types.status', options.status)
     }
     const paginator = await query
-      .select('id', 'name')
+      .select('id', 'name', 'description', 'status')
       .paginate(page, perPage)
 
     return {
@@ -47,7 +47,7 @@ export const getType = async (typeId: number) => {
     if (!type) {
       throw new Error(`Type with ID: ${typeId} does not exist`)
     }
-    return { id: type.id, name: type.name }
+    return { id: type.id, name: type.name, description: type.description, status: type.status }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     throw new Error(`Error retrieving type: ${message}`)
@@ -58,12 +58,16 @@ export const createType = async (payload: createTypeValidatorInterface) => {
   try {
     const type = await Type.create({
       name: payload.name,
+      description: payload.description,
       investigationRequired: payload.investigationRequired,
+      status: payload.status,
     })
 
     return {
       id: type.id,
       name: type.name,
+      description: type.description,
+      status: type.status,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -84,12 +88,16 @@ export const updateType = async (
 
     await type.merge({
       name: payload.name,
+      description: payload.description,
       investigationRequired: payload.investigationRequired,
+      status: payload.status,
     }).save()
 
     return {
       id: type.id,
       name: type.name,
+      description: type.description,
+      status: type.status,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -108,13 +116,24 @@ export const deleteType = async (typeId: number) => {
     await type.delete()
   } catch (error) {
     const databaseError = error as { code?: string; errno?: number }
-    const message =
-      databaseError.code === 'ER_ROW_IS_REFERENCED_2' || databaseError.errno === 1451
-        ? 'Type cannot be deleted because it is referenced by one or more products'
-        : error instanceof Error
-          ? error.message
-          : String(error)
+    const isReferenced =
+      databaseError.code === 'ER_ROW_IS_REFERENCED_2' ||
+      databaseError.code === '23503' ||
+      databaseError.errno === 1451
+    const message = isReferenced
+      ? 'Type cannot be deleted because it is referenced by one or more products'
+      : error instanceof Error
+        ? error.message
+        : String(error)
 
-    throw new Error(`Error deleting type: ${message}`)
+    const deletionError = new Error(`Error deleting type: ${message}`) as Error & {
+      code?: string
+      errno?: number
+    }
+    if (isReferenced) {
+      deletionError.code = '23503'
+      deletionError.errno = 1451
+    }
+    throw deletionError
   }
 }

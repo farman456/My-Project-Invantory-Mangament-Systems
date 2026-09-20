@@ -15,6 +15,7 @@ import {
 import { listPaginationValidator } from '#validators/list_pagination_validator'
 import { validateListQuery } from '#validators/list_query_validator'
 import type { HttpContext } from '@adonisjs/core/http'
+import { normalizePurchaseInvoicePayload } from '#helpers/purchase_payload_helper'
 
 export default class PurchaseInvoicesController {
   public async index(ctx: HttpContext) {
@@ -40,7 +41,7 @@ export default class PurchaseInvoicesController {
 
   public async create(ctx: HttpContext) {
     try {
-      const payload = await createPurchaseInvoiceValidator.validate(ctx.request.body())
+      const payload = await createPurchaseInvoiceValidator.validate(normalizePurchaseInvoicePayload(ctx.request.body()))
       const purchaseInvoice = await createPurchaseInvoice(payload)
       return sendSuccess('Purchase invoice created successfully', purchaseInvoice)
     } catch (error) {
@@ -52,7 +53,8 @@ export default class PurchaseInvoicesController {
   public async update(ctx: HttpContext) {
     try {
       const { purchaseInvoiceId } = await purchaseInvoiceIdValidator.validate(ctx.params)
-      const payload = ctx.request.method() === 'PATCH' ? await updatePurchaseInvoiceValidator.validate(ctx.request.body()) : await createPurchaseInvoiceValidator.validate(ctx.request.body())
+      const normalized = normalizePurchaseInvoicePayload(ctx.request.body())
+      const payload = ctx.request.method() === 'PATCH' ? await updatePurchaseInvoiceValidator.validate(normalized) : await createPurchaseInvoiceValidator.validate(normalized)
       return sendSuccess('Purchase invoice updated successfully', await updatePurchaseInvoice(payload, purchaseInvoiceId))
     } catch (error) {
       console.log('Purchase invoice updating error', error)

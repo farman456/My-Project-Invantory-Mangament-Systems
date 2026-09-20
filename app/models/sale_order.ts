@@ -15,8 +15,8 @@ export default class SaleOrder extends BaseModel {
   @column()
   declare productId: number | null
 
-  @column()
-  declare orderDetails: string | null
+  @column({ serialize: (value: string | null) => { if (!value) return value; try { return JSON.parse(value) } catch { return value } } })
+  declare orderDetails: Record<string, unknown> | string | null
 
   @column()
   declare name: string | null

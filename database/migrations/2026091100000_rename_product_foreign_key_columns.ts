@@ -4,36 +4,56 @@ export default class extends BaseSchema {
   protected tableName = 'products'
 
   async up() {
-    this.schema.alterTable(this.tableName, (table) => {
-      table.dropForeign('type', 'products_type_foreign')
-      table.dropForeign('supplier', 'products_supplier_foreign')
-      table.renameColumn('type', 'type_id')
-      table.renameColumn('supplier', 'supplier_id')
-      table
-        .foreign('type_id', 'products_type_id_foreign')
-        .references('id')
-        .inTable('types')
-      table
-        .foreign('supplier_id', 'products_supplier_id_foreign')
-        .references('id')
-        .inTable('suppliers')
-    })
+    const missingColumns = ['category_id', 'distributor_id', 'manufacturer_id']
+
+    for (const columnName of missingColumns) {
+      const hasColumn = await this.schema.hasColumn(this.tableName, columnName)
+
+      if (!hasColumn) {
+        this.schema.alterTable(this.tableName, (table) => {
+          table.integer(columnName).nullable()
+        })
+      }
+    }
+
+    const fkDefs = [
+      { column: 'category_id', constraintName: 'products_category_id_foreign', table: 'categories' },
+      { column: 'distributor_id', constraintName: 'products_distributor_id_foreign', table: 'distributors' },
+      { column: 'manufacturer_id', constraintName: 'products_manufacturer_id_foreign', table: 'manufacturers' },
+    ]
+
+    for (const fk of fkDefs) {
+      const constraintExists = await this.schema.hasTable(fk.table)
+      if (!constraintExists) continue
+
+      this.schema.alterTable(this.tableName, (table) => {
+        table
+          .foreign(fk.column, fk.constraintName)
+          .references('id')
+          .inTable(fk.table)
+          .onUpdate('CASCADE')
+          .onDelete('RESTRICT')
+      })
+    }
   }
 
   async down() {
-    this.schema.alterTable(this.tableName, (table) => {
-      table.dropForeign('type_id', 'products_type_id_foreign')
-      table.dropForeign('supplier_id', 'products_supplier_id_foreign')
-      table.renameColumn('type_id', 'type')
-      table.renameColumn('supplier_id', 'supplier')
-      table
-        .foreign('type', 'products_type_foreign')
-        .references('id')
-        .inTable('types')
-      table
-        .foreign('supplier', 'products_supplier_foreign')
-        .references('id')
-        .inTable('suppliers')
-    })
+    const fkDefs = [
+      { column: 'category_id', constraintName: 'products_category_id_foreign' },
+      { column: 'distributor_id', constraintName: 'products_distributor_id_foreign' },
+      { column: 'manufacturer_id', constraintName: 'products_manufacturer_id_foreign' },
+    ]
+
+    for (const fk of fkDefs) {
+      this.schema.alterTable(this.tableName, (table) => {
+        table.dropForeign(fk.column, fk.constraintName)
+      })
+    }
+
+    for (const columnName of ['category_id', 'distributor_id', 'manufacturer_id']) {
+      this.schema.alterTable(this.tableName, (table) => {
+        table.dropColumn(columnName)
+      })
+    }
   }
 }
